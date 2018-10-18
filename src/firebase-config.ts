@@ -5,16 +5,9 @@ import {google} from 'googleapis';
 
 import {
     Data,
+    FirebaseConfigOptions,
     CacheOptions,
 } from './interfaces';
-
-export interface FirebaseConfigOptions {
-    projectId: string;
-    keyFileName: string;
-    host?: string;
-    scopes?: string[];
-    cacheOptions?: CacheOptions;
-}
 
 export class FirebaseConfig {
 
@@ -26,6 +19,7 @@ export class FirebaseConfig {
     public projectId: string = null;
     public keyFileName: string = null;
     public path: string = null;
+    public defaultErrorMessage = 'Invalid response from the Firebase Remote Config service';
 
     private _cache: NodeCache = null;
     private _etag: string = null;
@@ -70,11 +64,10 @@ export class FirebaseConfig {
         });
     }
 
-    public get(version?: number): Promise<Data> {
+    public get(): Promise<Data> {
         return new Promise((resolve, reject) => {
             this.getAccessToken().then((accessToken: string) => {
-                const errorMessage = 'Invalid response from the Firebase Remote Config service';
-                fetch(`https://${this.host}${this.path}${version ? `?version_number=${version}` : ''}`, {
+                fetch(`https://${this.host}${this.path}`, {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                         'Accept-Encoding': 'gzip',
@@ -86,25 +79,28 @@ export class FirebaseConfig {
                                 this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
                                 return response.json();
                             } else {
-                                reject(response.statusText || errorMessage);
+                                reject(response.statusText || this.defaultErrorMessage);
                             }
                         } else {
-                            reject(errorMessage);
+                            reject(this.defaultErrorMessage);
                         }
                     })
                     .then((data: Data) => {
                         if (data && data.parameters) {
-                            const config: Data = {};
+                            const parameters: Data = {};
                             for (const key in data.parameters) {
                                 if (data.parameters.hasOwnProperty(key)) {
-                                    config[key] = data.parameters[key]
+                                    const value = data.parameters[key]
                                         && data.parameters[key].defaultValue
                                         && data.parameters[key].defaultValue.value;
+                                    if (value) {
+                                        parameters[key] = value;
+                                    }
                                 }
                             }
-                            resolve(config);
+                            resolve(parameters);
                         } else {
-                            reject(errorMessage);
+                            reject(this.defaultErrorMessage);
                         }
                     })
                     .catch((error: any) => reject(error));
@@ -112,17 +108,17 @@ export class FirebaseConfig {
         });
     }
 
-    public set(config: Data): Promise<null> {
+    public set(parameters: Data): Promise<null> {
         return new Promise((resolve, reject) => {
             this.getAccessToken().then((accessToken: string) => {
                 const body: Data = {
                     parameters: {},
                 };
-                for (const key in config) {
-                    if (config.hasOwnProperty(key)) {
+                for (const key in parameters) {
+                    if (parameters.hasOwnProperty(key)) {
                         body.parameters[key] = {
                             defaultValue: {
-                                value: config[key],
+                                value: parameters[key],
                             },
                         };
                     }
@@ -138,16 +134,15 @@ export class FirebaseConfig {
                     body: JSON.stringify(body),
                 })
                     .then((response: any) => {
-                        const errorMessage = 'Invalid response from the Firebase Remote Config service';
                         if (response) {
                             if (response.status === 200) {
                                 this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
                                 resolve();
                             } else {
-                                reject(response.statusText || errorMessage);
+                                reject(response.statusText || this.defaultErrorMessage);
                             }
                         } else {
-                            reject(errorMessage);
+                            reject(this.defaultErrorMessage);
                         }
                     })
                     .catch((error: any) => reject(error));

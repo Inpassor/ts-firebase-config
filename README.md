@@ -1,6 +1,8 @@
 # Firebase Remote Config library
 
-## Quick example
+https://firebase.google.com/products/remote-config/
+
+## Example
 
 ```typescript
 import * as path from 'path';
@@ -38,8 +40,8 @@ firebaseConfig.set({
 /**
  * Get remote config 
  */
-firebaseConfig.get().then((config: Data) => {
-    console.log(config);
+firebaseConfig.get().then((parameters: Data) => {
+    console.log(parameters);
 }, (error: any) => {
     console.error(error);
 });
