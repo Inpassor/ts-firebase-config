@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import fetch from 'node-fetch';
-import {google} from 'googleapis';
 import * as NodeCache from 'node-cache';
+import {google} from 'googleapis';
 
 import {
     Data,
