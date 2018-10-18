@@ -1,0 +1,40 @@
+{
+    "name": "@inpassor/firebase-config",
+    "version": "0.1.0",
+    "license": "MIT",
+    "author": "Oleg V. Kuzmin",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Inpassor/ts-firebase-config"
+    },
+    "bugs": {
+        "url": "https://github.com/Inpassor/ts-firebase-config/issues"
+    },
+    "homepage": "https://github.com/Inpassor/ts-firebase-config",
+    "description": "Firebase Remote Config library",
+    "keywords": [
+        "firebase",
+        "remote",
+        "config",
+        "REST",
+        "library",
+        "javascript",
+        "typescript"
+    ],
+    "main": "lib/index.js",
+    "scripts": {
+        "lint": "tslint --project tsconfig.json",
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@types/node": "^10.12.0",
+        "google-auth-library": "^2.0.0",
+        "googleapis": "^34.0.0",
+        "node-cache": "^4.2.0",
+        "node-fetch": "^2.2.0"
+    },
+    "devDependencies": {
+        "tslint": "^5.11.0",
+        "typescript": "2.9.2"
+    }
+}

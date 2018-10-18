@@ -1,0 +1,31 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "baseUrl": "src",
+        "outDir": "./lib",
+        "paths": {
+        },
+        "sourceMap": true,
+        "declaration": true,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "target": "es6",
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "types": [
+            "node"
+        ],
+        "lib": [
+            "es6"
+        ]
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
