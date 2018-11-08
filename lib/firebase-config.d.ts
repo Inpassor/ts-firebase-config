@@ -5,6 +5,8 @@ export declare class FirebaseConfig {
     cacheOptions: CacheOptions;
     projectId: string;
     keyFileName: string;
+    key: string;
+    keyId: string;
     path: string;
     defaultErrorMessage: string;
     private _cache;

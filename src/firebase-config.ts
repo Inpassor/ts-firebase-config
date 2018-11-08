@@ -1,7 +1,7 @@
-import * as fs from 'fs';
 import fetch from 'node-fetch';
 import * as NodeCache from 'node-cache';
 import {google} from 'googleapis';
+import {JWTOptions} from 'google-auth-library/build/src/auth/jwtclient';
 
 import {
     Data,
@@ -18,6 +18,8 @@ export class FirebaseConfig {
     public cacheOptions: CacheOptions = null;
     public projectId: string = null;
     public keyFileName: string = null;
+    public key: string = null;
+    public keyId: string = null;
     public path: string = null;
     public defaultErrorMessage = 'Invalid response from the Firebase Remote Config service';
 
@@ -46,14 +48,19 @@ export class FirebaseConfig {
 
     public getAccessToken(): Promise<string> {
         return new Promise((resolve, reject) => {
-            const key = JSON.parse(fs.readFileSync(this.keyFileName, 'utf8'));
-            const jwtClient = new google.auth.JWT(
-                key.client_email,
-                null,
-                key.private_key,
-                this.scopes,
-                null
-            );
+            const clientOptions: JWTOptions = {
+                scopes: this.scopes,
+            };
+            if (this.keyFileName) {
+                clientOptions.keyFile = this.keyFileName;
+            }
+            if (this.key) {
+                clientOptions.key = this.key;
+            }
+            if (this.keyId) {
+                clientOptions.keyId = this.keyId;
+            }
+            const jwtClient = new google.auth.JWT(clientOptions);
             jwtClient.authorize((error: any, tokens) => {
                 if (error) {
                     reject(error);

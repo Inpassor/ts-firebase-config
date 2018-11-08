@@ -4,7 +4,9 @@ export interface Data {
 
 export interface FirebaseConfigOptions {
     projectId: string;
-    keyFileName: string;
+    keyFileName?: string;
+    key?: string;
+    keyId?: string;
     host?: string;
     scopes?: string[];
     cacheOptions?: CacheOptions;
