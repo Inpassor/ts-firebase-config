@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import * as NodeCache from 'node-cache';
 import {google} from 'googleapis';
+import {Compute} from 'google-auth-library';
 import {JWTOptions} from 'google-auth-library/build/src/auth/jwtclient';
 
 import {
@@ -54,20 +55,28 @@ export class FirebaseConfig {
             if (this.keyFileName) {
                 clientOptions.keyFile = this.keyFileName;
             }
-            if (this.key) {
+            if (this.key && this.keyId) {
                 clientOptions.key = this.key;
-            }
-            if (this.keyId) {
                 clientOptions.keyId = this.keyId;
             }
-            const jwtClient = new google.auth.JWT(clientOptions);
-            jwtClient.authorize((error: any, tokens) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(tokens.access_token);
-                }
-            });
+            if (this.keyFileName || (this.key && this.keyId)) {
+                const jwtClient = new google.auth.JWT(clientOptions);
+                jwtClient.authorize((error: any, tokens) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(tokens.access_token);
+                    }
+                });
+            } else {
+                new Compute().getAccessToken((error: any, token?: string | null) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(token);
+                    }
+                });
+            }
         });
     }
 

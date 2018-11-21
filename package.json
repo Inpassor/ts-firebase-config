@@ -1,6 +1,6 @@
 {
     "name": "@inpassor/firebase-config",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "license": "MIT",
     "author": "Oleg V. Kuzmin",
     "repository": {
@@ -28,12 +28,12 @@
     },
     "dependencies": {
         "google-auth-library": "^2.0.1",
-        "googleapis": "^34.0.0",
+        "googleapis": "^35.0.0",
         "node-cache": "^4.2.0",
-        "node-fetch": "^2.2.1"
+        "node-fetch": "^2.3.0"
     },
     "devDependencies": {
-        "@types/node": "^10.12.3",
+        "@types/node": "^10.12.9",
         "tslint": "^5.11.0",
         "typescript": "^3.1.6"
     }
