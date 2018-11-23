@@ -69,11 +69,14 @@ export class FirebaseConfig {
                     }
                 });
             } else {
-                new Compute().getAccessToken((error: any, token?: string | null) => {
+                const client = new Compute();
+                const url = `https://www.googleapis.com/dns/v1/projects/${this.projectId}`;
+                client.request({url}, (error: any, {data}) => {
                     if (error) {
                         reject(error);
                     } else {
-                        resolve(token);
+                        console.log(data);
+                        resolve(data + '');
                     }
                 });
             }
