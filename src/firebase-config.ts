@@ -69,10 +69,11 @@ export class FirebaseConfig {
                     }
                 });
             } else {
-                new Compute().getAccessToken((error: any, token?: string | null) => {
+                (new Compute()).getAccessToken((error: any, token?: string | null) => {
                     if (error) {
                         reject(error);
                     } else {
+                        console.log('token', token);
                         resolve(token);
                     }
                 });
