@@ -73,7 +73,6 @@ export class FirebaseConfig {
                     if (error) {
                         reject(error);
                     } else {
-                        console.log('token', token);
                         resolve(token);
                     }
                 });
@@ -91,6 +90,7 @@ export class FirebaseConfig {
                     },
                 })
                     .then((response: any): Data => {
+                        console.log(response);
                         if (response) {
                             if (response.status === 200) {
                                 this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
@@ -103,6 +103,7 @@ export class FirebaseConfig {
                         }
                     })
                     .then((data: Data) => {
+                        console.log(data);
                         if (data && data.parameters) {
                             const parameters: Data = {};
                             for (const key in data.parameters) {
