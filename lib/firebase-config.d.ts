@@ -15,6 +15,6 @@ export declare class FirebaseConfig {
     getETag(): string;
     setETag(etag: string): void;
     getAccessToken(): Promise<string>;
-    get(): Promise<Data>;
+    get(): Promise<Data | null>;
     set(parameters: Data): Promise<null>;
 }

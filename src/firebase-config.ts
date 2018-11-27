@@ -80,7 +80,7 @@ export class FirebaseConfig {
         });
     }
 
-    public get(): Promise<Data> {
+    public get(): Promise<Data | null> {
         return new Promise((resolve, reject) => {
             this.getAccessToken().then((accessToken: string) => {
                 fetch(`https://${this.host}${this.path}`, {
@@ -90,7 +90,6 @@ export class FirebaseConfig {
                     },
                 })
                     .then((response: any): Data => {
-                        console.log(response);
                         if (response) {
                             if (response.status === 200) {
                                 this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
@@ -103,7 +102,6 @@ export class FirebaseConfig {
                         }
                     })
                     .then((data: Data) => {
-                        console.log(data);
                         if (data && data.parameters) {
                             const parameters: Data = {};
                             for (const key in data.parameters) {
@@ -118,7 +116,7 @@ export class FirebaseConfig {
                             }
                             resolve(parameters);
                         } else {
-                            reject(this.defaultErrorMessage);
+                            resolve(null);
                         }
                     })
                     .catch((error: any) => reject(error));
