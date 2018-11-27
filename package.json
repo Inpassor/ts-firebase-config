@@ -1,6 +1,6 @@
 {
     "name": "@inpassor/firebase-config",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "license": "MIT",
     "author": "Oleg V. Kuzmin",
     "repository": {
@@ -33,7 +33,7 @@
         "node-fetch": "^2.3.0"
     },
     "devDependencies": {
-        "@types/node": "^10.12.9",
+        "@types/node": "^10.12.10",
         "tslint": "^5.11.0",
         "typescript": "^3.1.6"
     }
