@@ -2,6 +2,17 @@
 
 https://firebase.google.com/products/remote-config/
 
+This library used for interaction with Firebase Remote Config REST API to set or get
+Remote Config values.
+
+For storing ETag value the library uses
+[node-cache](https://www.npmjs.com/package/node-cache) npm package.
+
+To authorize Remote Config API requests the library have three options on your choice:
+- Provide a **private key file** for your service account.
+- Provide a **key** and **keyId** of your Firebase project.
+- Use none of above in case of usage of the library in the Firebase environment.
+
 ## Example
 
 ```typescript
@@ -17,6 +28,8 @@ import {
 const firebaseConfig = new FirebaseConfig({
     projectId: 'my-awesome-project-id',
     keyFileName: path.resolve('path-to', 'my-awesome-project-service-key.json'),
+    // key: 'my-project-key',
+    // keyId: 'my-project-key-id',
     // cacheOptions: {
     //     stdTTL?: number;
     //     checkperiod?: number;
@@ -27,7 +40,7 @@ const firebaseConfig = new FirebaseConfig({
 });
 
 /**
- * Force remote config publish (ETag = *) 
+ * Set Remote Config 
  */
 firebaseConfig.set({
     // [key: string]: any
@@ -38,7 +51,7 @@ firebaseConfig.set({
 });
 
 /**
- * Get remote config 
+ * Get Remote Config 
  */
 firebaseConfig.get().then((parameters: Data) => {
     console.log(parameters);

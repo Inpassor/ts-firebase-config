@@ -1,4 +1,4 @@
-import { Data, FirebaseConfigOptions, CacheOptions } from './interfaces';
+import { DataObject, FirebaseConfigOptions, CacheOptions } from './interfaces';
 export declare class FirebaseConfig {
     host: string;
     scopes: string[];
@@ -9,12 +9,12 @@ export declare class FirebaseConfig {
     keyId: string;
     path: string;
     defaultErrorMessage: string;
-    private _cache;
-    private _etag;
+    private cache;
+    private etag;
     constructor(options: FirebaseConfigOptions);
-    getETag(): string;
-    setETag(etag: string): void;
-    getAccessToken(): Promise<string>;
-    get(): Promise<Data | null>;
-    set(parameters: Data): Promise<null>;
+    private getETag;
+    private setETag;
+    private getAccessToken;
+    get(): Promise<DataObject | null>;
+    set(parameters: DataObject): Promise<null>;
 }

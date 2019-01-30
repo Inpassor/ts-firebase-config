@@ -1,4 +1,4 @@
-export interface Data {
+export interface DataObject {
     [key: string]: any;
 }
 

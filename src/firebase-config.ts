@@ -1,11 +1,14 @@
 import fetch from 'node-fetch';
 import * as NodeCache from 'node-cache';
 import {google} from 'googleapis';
-import {Compute} from 'google-auth-library';
-import {JWTOptions} from 'google-auth-library/build/src/auth/jwtclient';
+import {
+    Compute,
+    Credentials,
+    JWTOptions,
+} from 'google-auth-library';
 
 import {
-    Data,
+    DataObject,
     FirebaseConfigOptions,
     CacheOptions,
 } from './interfaces';
@@ -24,44 +27,44 @@ export class FirebaseConfig {
     public path: string = null;
     public defaultErrorMessage = 'Invalid response from the Firebase Remote Config service';
 
-    private _cache: NodeCache = null;
-    private _etag: string = null;
+    private cache: NodeCache = null;
+    private etag: string = null;
 
     constructor(options: FirebaseConfigOptions) {
         Object.assign(this, options);
         this.path = `/v1/projects/${this.projectId}/remoteConfig`;
-        this._cache = new NodeCache(this.cacheOptions || {});
+        this.cache = new NodeCache(this.cacheOptions || {});
     }
 
-    public getETag(): string {
-        if (!this._etag) {
-            this._etag = this._cache.get('--firebaseremoteconfig--etag--') || '*';
+    private getETag(): string {
+        if (!this.etag) {
+            this.etag = this.cache.get('--firebaseremoteconfig--etag--') || '*';
         }
-        return this._etag;
+        return this.etag;
     }
 
-    public setETag(etag: string): void {
-        if (etag && etag !== this._etag) {
-            this._etag = etag;
-            this._cache.set('--firebaseremoteconfig--etag--', this._etag);
+    private setETag(etag: string): void {
+        if (etag && etag !== this.etag) {
+            this.etag = etag;
+            this.cache.set('--firebaseremoteconfig--etag--', this.etag);
         }
     }
 
-    public getAccessToken(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const clientOptions: JWTOptions = {
-                scopes: this.scopes,
-            };
-            if (this.keyFileName) {
-                clientOptions.keyFile = this.keyFileName;
-            }
-            if (this.key && this.keyId) {
-                clientOptions.key = this.key;
-                clientOptions.keyId = this.keyId;
-            }
+    private getAccessToken(): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
             if (this.keyFileName || (this.key && this.keyId)) {
+                const clientOptions: JWTOptions = {
+                    scopes: this.scopes,
+                };
+                if (this.keyFileName) {
+                    clientOptions.keyFile = this.keyFileName;
+                }
+                if (this.key && this.keyId) {
+                    clientOptions.key = this.key;
+                    clientOptions.keyId = this.keyId;
+                }
                 const jwtClient = new google.auth.JWT(clientOptions);
-                jwtClient.authorize((error: any, tokens) => {
+                jwtClient.authorize((error: any, tokens: Credentials) => {
                     if (error) {
                         reject(error);
                     } else {
@@ -80,8 +83,8 @@ export class FirebaseConfig {
         });
     }
 
-    public get(): Promise<Data | null> {
-        return new Promise((resolve, reject) => {
+    public get(): Promise<DataObject | null> {
+        return new Promise<DataObject | null>((resolve, reject) => {
             this.getAccessToken().then((accessToken: string) => {
                 fetch(`https://${this.host}${this.path}`, {
                     headers: {
@@ -89,7 +92,7 @@ export class FirebaseConfig {
                         'Accept-Encoding': 'gzip',
                     },
                 })
-                    .then((response: any): Data => {
+                    .then((response: any): DataObject => {
                         if (response) {
                             if (response.status === 200) {
                                 this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
@@ -101,9 +104,9 @@ export class FirebaseConfig {
                             reject(this.defaultErrorMessage);
                         }
                     })
-                    .then((data: Data) => {
+                    .then((data: DataObject) => {
                         if (data && data.parameters) {
-                            const parameters: Data = {};
+                            const parameters: DataObject = {};
                             for (const key in data.parameters) {
                                 if (data.parameters.hasOwnProperty(key)) {
                                     const value = data.parameters[key]
@@ -124,10 +127,10 @@ export class FirebaseConfig {
         });
     }
 
-    public set(parameters: Data): Promise<null> {
-        return new Promise((resolve, reject) => {
+    public set(parameters: DataObject): Promise<null> {
+        return new Promise<null>((resolve, reject) => {
             this.getAccessToken().then((accessToken: string) => {
-                const body: Data = {
+                const body: DataObject = {
                     parameters: {},
                 };
                 for (const key in parameters) {
