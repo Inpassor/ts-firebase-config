@@ -1,5 +1,9 @@
 # Firebase Remote Config library
 
+![](https://img.shields.io/npm/v/@inpassor/firebase-config.svg?style=flat)
+![](https://img.shields.io/github/license/Inpassor/ts-firebase-config.svg?style=flat-square)
+![](https://img.shields.io/npm/dt/@inpassor/firebase-config.svg?style=flat-square)
+
 https://firebase.google.com/products/remote-config/
 
 This library used for interaction with Firebase Remote Config REST API to set or get
