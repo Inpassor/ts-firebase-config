@@ -10,6 +10,7 @@ export interface FirebaseConfigOptions {
     host?: string;
     scopes?: string[];
     cacheOptions?: CacheOptions;
+    delimiter?: string;
 }
 
 export interface CacheOptions {

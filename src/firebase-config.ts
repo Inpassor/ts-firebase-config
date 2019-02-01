@@ -30,6 +30,7 @@ export class FirebaseConfig {
     public keyId: string = null;
     public path: string = null;
     public defaultErrorMessage = 'Invalid response from the Firebase Remote Config service';
+    public delimiter: string = '---';
 
     private cache: NodeCache = null;
     private etag: string = null;
@@ -121,7 +122,9 @@ export class FirebaseConfig {
                                     }
                                 }
                             }
-                            resolve(unflatten(parameters));
+                            resolve(unflatten(parameters, {
+                                delimiter: this.delimiter,
+                            }));
                         } else {
                             resolve(null);
                         }
@@ -137,7 +140,9 @@ export class FirebaseConfig {
                 const body: DataObject = {
                     parameters: {},
                 };
-                const flattenParameters = flatten(parameters);
+                const flattenParameters = flatten(parameters, {
+                    delimiter: this.delimiter,
+                });
                 for (const key in flattenParameters) {
                     if (flattenParameters.hasOwnProperty(key)) {
                         body.parameters[key] = {

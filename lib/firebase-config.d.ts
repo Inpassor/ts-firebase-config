@@ -9,6 +9,7 @@ export declare class FirebaseConfig {
     keyId: string;
     path: string;
     defaultErrorMessage: string;
+    delimiter: string;
     private cache;
     private etag;
     constructor(options: FirebaseConfigOptions);
