@@ -1,3 +1,7 @@
+import {
+    flatten,
+    unflatten,
+} from 'flat';
 import fetch from 'node-fetch';
 import * as NodeCache from 'node-cache';
 import {google} from 'googleapis';
@@ -117,7 +121,7 @@ export class FirebaseConfig {
                                     }
                                 }
                             }
-                            resolve(parameters);
+                            resolve(unflatten(parameters));
                         } else {
                             resolve(null);
                         }
@@ -133,11 +137,12 @@ export class FirebaseConfig {
                 const body: DataObject = {
                     parameters: {},
                 };
-                for (const key in parameters) {
-                    if (parameters.hasOwnProperty(key)) {
+                const flattenParameters = flatten(parameters);
+                for (const key in flattenParameters) {
+                    if (flattenParameters.hasOwnProperty(key)) {
                         body.parameters[key] = {
                             defaultValue: {
-                                value: parameters[key],
+                                value: flattenParameters[key],
                             },
                         };
                     }

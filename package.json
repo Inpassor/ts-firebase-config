@@ -28,6 +28,7 @@
         "build": "npm run lint && npm run clean && tsc"
     },
     "dependencies": {
+        "flat": "^4.1.0",
         "google-auth-library": "^3.0.1",
         "googleapis": "^37.1.0",
         "node-cache": "^4.2.0",
