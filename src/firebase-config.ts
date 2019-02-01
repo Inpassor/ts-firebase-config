@@ -30,7 +30,7 @@ export class FirebaseConfig {
     public keyId: string = null;
     public path: string = null;
     public defaultErrorMessage = 'Invalid response from the Firebase Remote Config service';
-    public delimiter: string = '---';
+    public delimiter: string = '___';
 
     private cache: NodeCache = null;
     private etag: string = null;
