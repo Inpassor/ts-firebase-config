@@ -23,7 +23,7 @@ To authorize Remote Config API requests the library have three options on your c
 import * as path from 'path';
 import {
     FirebaseConfig,
-    Data,
+    DataObject,
 } from '@inpassor/firebase-config';
 
 /**
@@ -57,7 +57,7 @@ firebaseConfig.set({
 /**
  * Get Remote Config 
  */
-firebaseConfig.get().then((parameters: Data) => {
+firebaseConfig.get().then((parameters: DataObject) => {
     console.log(parameters);
 }, (error: any) => {
     console.error(error);
