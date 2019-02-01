@@ -23,8 +23,9 @@
     ],
     "main": "lib/index.js",
     "scripts": {
+        "clean": "rimraf ./lib",
         "lint": "tslint --project tsconfig.json",
-        "build": "npm run lint && tsc"
+        "build": "npm run lint && npm run clean && tsc"
     },
     "dependencies": {
         "google-auth-library": "^3.0.1",
@@ -33,8 +34,9 @@
         "node-fetch": "^2.3.0"
     },
     "devDependencies": {
-        "@types/node": "^10.12.19",
+        "@types/node": "^10.12.21",
+        "rimraf": "^2.6.3",
         "tslint": "^5.12.1",
-        "typescript": "^3.2.4"
+        "typescript": "^3.3.1"
     }
 }

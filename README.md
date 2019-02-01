@@ -7,7 +7,7 @@
 https://firebase.google.com/products/remote-config/
 
 This library used for interaction with Firebase Remote Config REST API to set or get
-Remote Config values.
+Remote Config values in Node.js environment.
 
 For storing ETag value the library uses
 [node-cache](https://www.npmjs.com/package/node-cache) npm package.
