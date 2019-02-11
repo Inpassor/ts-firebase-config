@@ -114,10 +114,14 @@ export class FirebaseConfig {
                             const parameters: DataObject = {};
                             for (const key in data.parameters) {
                                 if (data.parameters.hasOwnProperty(key)) {
-                                    const value = data.parameters[key]
+                                    let value = data.parameters[key]
                                         && data.parameters[key].defaultValue
                                         && data.parameters[key].defaultValue.value;
                                     if (value) {
+                                        const numberValue = +value;
+                                        if (!isNaN(numberValue)) {
+                                            value = numberValue;
+                                        }
                                         parameters[key] = value;
                                     }
                                 }
@@ -145,9 +149,13 @@ export class FirebaseConfig {
                 });
                 for (const key in flattenParameters) {
                     if (flattenParameters.hasOwnProperty(key)) {
+                        let value = flattenParameters[key];
+                        if (typeof value !== 'string') {
+                            value += '';
+                        }
                         body.parameters[key] = {
                             defaultValue: {
-                                value: flattenParameters[key],
+                                value,
                             },
                         };
                     }
