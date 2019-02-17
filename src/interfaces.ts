@@ -3,7 +3,7 @@ export interface DataObject {
 }
 
 export interface FirebaseConfigOptions {
-    projectId: string;
+    projectId?: string;
     keyFileName?: string;
     key?: string;
     keyId?: string;

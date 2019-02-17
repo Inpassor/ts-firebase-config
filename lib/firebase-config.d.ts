@@ -12,10 +12,13 @@ export declare class FirebaseConfig {
     delimiter: string;
     private cache;
     private etag;
-    constructor(options: FirebaseConfigOptions);
+    constructor(options?: FirebaseConfigOptions);
     private getETag;
     private setETag;
-    private getAccessToken;
+    private getProjectId;
+    private getPath;
+    private getClient;
+    private getAuthHeaders;
     get(): Promise<DataObject | null>;
     set(parameters: DataObject): Promise<null>;
 }

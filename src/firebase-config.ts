@@ -2,12 +2,12 @@ import {
     flatten,
     unflatten,
 } from 'flat';
-import fetch from 'node-fetch';
 import * as NodeCache from 'node-cache';
-import {google} from 'googleapis';
 import {
+    auth,
     Compute,
-    Credentials,
+    JWT,
+    UserRefreshClient,
     JWTOptions,
 } from 'google-auth-library';
 
@@ -35,9 +35,8 @@ export class FirebaseConfig {
     private cache: NodeCache = null;
     private etag: string = null;
 
-    constructor(options: FirebaseConfigOptions) {
+    constructor(options?: FirebaseConfigOptions) {
         Object.assign(this, options);
-        this.path = `/v1/projects/${this.projectId}/remoteConfig`;
         this.cache = new NodeCache(this.cacheOptions || {});
     }
 
@@ -55,128 +54,151 @@ export class FirebaseConfig {
         }
     }
 
-    private getAccessToken(): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            if (this.keyFileName || (this.key && this.keyId)) {
-                const clientOptions: JWTOptions = {
-                    scopes: this.scopes,
-                };
-                if (this.keyFileName) {
-                    clientOptions.keyFile = this.keyFileName;
-                }
-                if (this.key && this.keyId) {
-                    clientOptions.key = this.key;
-                    clientOptions.keyId = this.keyId;
-                }
-                const jwtClient = new google.auth.JWT(clientOptions);
-                jwtClient.authorize((error: any, tokens: Credentials) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(tokens.access_token);
-                    }
-                });
-            } else {
-                (new Compute()).getAccessToken((error: any, token?: string | null) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(token);
-                    }
-                });
+    private async getProjectId(): Promise<string> {
+        return Promise.resolve(this.projectId || await auth.getProjectId());
+    }
+
+    private async getPath(): Promise<string> {
+        const projectId = await this.getProjectId();
+        return Promise.resolve(this.path || `/v1/projects/${projectId}/remoteConfig`);
+    }
+
+    private async getClient(): Promise<Compute | JWT | UserRefreshClient> {
+        if (this.keyFileName || (this.key && this.keyId)) {
+            const clientOptions: JWTOptions = {
+                scopes: this.scopes,
+            };
+            if (this.keyFileName) {
+                clientOptions.keyFile = this.keyFileName;
             }
+            if (this.key && this.keyId) {
+                clientOptions.key = this.key;
+                clientOptions.keyId = this.keyId;
+            }
+            return Promise.resolve(new JWT(clientOptions));
+        }
+        return await auth.getClient({
+            scopes: this.scopes,
+        });
+    }
+
+    private getAuthHeaders(): Promise<DataObject> {
+        return new Promise<DataObject>((resolve, reject) => {
+            Promise.all([
+                this.getProjectId(),
+                this.getClient(),
+            ]).then(
+                ([projectId, client]) => {
+                    client.getRequestHeaders().then(
+                        (headers) => {
+                            headers['Accept-Encoding'] = 'gzip';
+                            resolve(headers);
+                        },
+                        (error: any) => reject(error),
+                    );
+                },
+                (error: any) => reject(error),
+            );
         });
     }
 
     public get(): Promise<DataObject | null> {
         return new Promise<DataObject | null>((resolve, reject) => {
-            this.getAccessToken().then((accessToken: string) => {
-                fetch(`https://${this.host}${this.path}`, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Accept-Encoding': 'gzip',
-                    },
-                })
-                    .then((response: any): DataObject => {
-                        if (response) {
-                            if (response.status === 200) {
-                                this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
-                                return response.json();
-                            } else {
-                                reject(response.statusText || this.defaultErrorMessage);
-                            }
-                        } else {
-                            reject(this.defaultErrorMessage);
-                        }
-                    })
-                    .then((data: DataObject) => {
-                        if (data && data.parameters) {
-                            const parameters: DataObject = {};
-                            for (const key in data.parameters) {
-                                if (data.parameters.hasOwnProperty(key)) {
-                                    const value = data.parameters[key]
-                                        && data.parameters[key].defaultValue
-                                        && data.parameters[key].defaultValue.value;
-                                    if (value) {
-                                        parameters[key] = JSON.parse(value);
+            Promise.all([
+                this.getClient(),
+                this.getAuthHeaders(),
+                this.getPath(),
+            ]).then(
+                ([client, headers, path]) => {
+                    client.request({
+                        url: `https://${this.host}${path}`,
+                        headers,
+                    }).then(
+                        (response: any) => {
+                            if (response) {
+                                if (response.status === 200) {
+                                    this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
+                                    const data = response.data;
+                                    if (data && data.parameters) {
+                                        const parameters: DataObject = {};
+                                        for (const key in data.parameters) {
+                                            if (data.parameters.hasOwnProperty(key)) {
+                                                const value = data.parameters[key]
+                                                    && data.parameters[key].defaultValue
+                                                    && data.parameters[key].defaultValue.value;
+                                                if (value) {
+                                                    parameters[key] = JSON.parse(value);
+                                                }
+                                            }
+                                        }
+                                        resolve(unflatten(parameters, {
+                                            delimiter: this.delimiter,
+                                        }));
+                                    } else {
+                                        resolve(null);
                                     }
+                                } else {
+                                    reject(response.statusText || this.defaultErrorMessage);
                                 }
+                            } else {
+                                reject(this.defaultErrorMessage);
                             }
-                            resolve(unflatten(parameters, {
-                                delimiter: this.delimiter,
-                            }));
-                        } else {
-                            resolve(null);
-                        }
-                    })
-                    .catch((error: any) => reject(error));
-            }, (error: any) => reject(error));
+                        },
+                        (error: any) => reject(error),
+                    );
+                }, (error: any) => reject(error),
+            );
         });
     }
 
     public set(parameters: DataObject): Promise<null> {
         return new Promise<null>((resolve, reject) => {
-            this.getAccessToken().then((accessToken: string) => {
-                const body: DataObject = {
-                    parameters: {},
-                };
-                const flattenParameters = flatten(parameters, {
-                    delimiter: this.delimiter,
-                });
-                for (const key in flattenParameters) {
-                    if (flattenParameters.hasOwnProperty(key)) {
-                        const value = JSON.stringify(flattenParameters[key]);
-                        body.parameters[key] = {
-                            defaultValue: {
-                                value,
-                            },
-                        };
-                    }
-                }
-                fetch(`https://${this.host}${this.path}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json; UTF-8',
-                        'Accept-Encoding': 'gzip',
-                        'If-Match': this.getETag(),
-                    },
-                    body: JSON.stringify(body),
-                })
-                    .then((response: any) => {
-                        if (response) {
-                            if (response.status === 200) {
-                                this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
-                                resolve();
-                            } else {
-                                reject(response.statusText || this.defaultErrorMessage);
-                            }
-                        } else {
-                            reject(this.defaultErrorMessage);
+            Promise.all([
+                this.getClient(),
+                this.getAuthHeaders(),
+                this.getPath(),
+            ]).then(
+                ([client, headers, path]) => {
+                    const body: DataObject = {
+                        parameters: {},
+                    };
+                    const flattenParameters = flatten(parameters, {
+                        delimiter: this.delimiter,
+                    });
+                    for (const key in flattenParameters) {
+                        if (flattenParameters.hasOwnProperty(key)) {
+                            const value = JSON.stringify(flattenParameters[key]);
+                            body.parameters[key] = {
+                                defaultValue: {
+                                    value,
+                                },
+                            };
                         }
-                    })
-                    .catch((error: any) => reject(error));
-            }, (error: any) => reject(error));
+                    }
+                    headers['Content-Type'] = 'application/json; UTF-8';
+                    headers['If-Match'] = this.getETag();
+                    client.request({
+                        url: `https://${this.host}${path}`,
+                        method: 'PUT',
+                        headers,
+                        body: JSON.stringify(body),
+                    }).then(
+                        (response: any) => {
+                            if (response) {
+                                if (response.status === 200) {
+                                    this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
+                                    resolve();
+                                } else {
+                                    reject(response.statusText || this.defaultErrorMessage);
+                                }
+                            } else {
+                                reject(this.defaultErrorMessage);
+                            }
+                        },
+                        (error: any) => reject(error),
+                    );
+                }, (error: any) => reject(error),
+            );
         });
     }
 
