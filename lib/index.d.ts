@@ -31,6 +31,6 @@ export declare class FirebaseConfig {
     private decodeParameters;
     private getETag;
     private setETag;
-    set(parameters: DataObject): Promise<null>;
-    get(): Promise<DataObject | null>;
+    set(parameters: DataObject): Promise<void>;
+    get(): Promise<DataObject>;
 }

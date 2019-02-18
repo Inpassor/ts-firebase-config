@@ -48,7 +48,7 @@ export class FirebaseConfig {
         if (!this.projectId) {
             this.projectId = await auth.getProjectId();
         }
-        return Promise.resolve(this.projectId);
+        return this.projectId;
     }
 
     private async getClient(): Promise<Compute | JWT | UserRefreshClient> {
@@ -72,32 +72,19 @@ export class FirebaseConfig {
                 });
             }
         }
-        return Promise.resolve(this.client);
+        return this.client;
     }
 
-    private getRequestHeaders(): Promise<DataObject> {
-        return new Promise<DataObject>((resolve, reject) => {
-            Promise.all([
-                this.getProjectId(),
-                this.getClient(),
-            ]).then(
-                ([projectId, client]) => {
-                    client.getRequestHeaders().then(
-                        (headers) => {
-                            headers['Accept-Encoding'] = 'gzip';
-                            resolve(headers);
-                        },
-                        (error: any) => reject(error),
-                    );
-                },
-                (error: any) => reject(error),
-            );
-        });
+    private async getRequestHeaders(): Promise<DataObject> {
+        const client = await this.getClient();
+        const headers = await client.getRequestHeaders();
+        headers['Accept-Encoding'] = 'gzip';
+        return headers;
     }
 
     private async getUrl(): Promise<string> {
         const projectId = await this.getProjectId();
-        return Promise.resolve(`https://firebaseremoteconfig.googleapis.com/v1/projects/${projectId}/remoteConfig`);
+        return `https://firebaseremoteconfig.googleapis.com/v1/projects/${projectId}/remoteConfig`;
     }
 
     private encodeParameters(parameters: DataObject): string {
@@ -120,7 +107,7 @@ export class FirebaseConfig {
         return JSON.stringify(body);
     }
 
-    private decodeParameters(data: any): DataObject | null {
+    private decodeParameters(data: any): DataObject {
         if (data && data.parameters) {
             const parameters: DataObject = {};
             for (const key in data.parameters) {
@@ -155,70 +142,42 @@ export class FirebaseConfig {
         }
     }
 
-    public set(parameters: DataObject): Promise<null> {
-        return new Promise<null>((resolve, reject) => {
-            Promise.all([
-                this.getClient(),
-                this.getRequestHeaders(),
-                this.getUrl(),
-            ]).then(
-                ([client, headers, url]) => {
-                    headers['Content-Type'] = 'application/json; UTF-8';
-                    headers['If-Match'] = this.getETag();
-                    client.request({
-                        url,
-                        method: 'PUT',
-                        headers,
-                        body: this.encodeParameters(parameters),
-                    }).then(
-                        (response: any) => {
-                            if (response) {
-                                if (response.status === 200) {
-                                    this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
-                                    resolve();
-                                } else {
-                                    reject(response.statusText || this.defaultErrorMessage);
-                                }
-                            } else {
-                                reject(this.defaultErrorMessage);
-                            }
-                        },
-                        (error: any) => reject(error),
-                    );
-                }, (error: any) => reject(error),
-            );
+    public async set(parameters: DataObject): Promise<void> {
+        const [client, headers, url] = await Promise.all([
+            this.getClient(),
+            this.getRequestHeaders(),
+            this.getUrl(),
+        ]);
+        headers['Content-Type'] = 'application/json; UTF-8';
+        headers['If-Match'] = this.getETag();
+        const response = await client.request({
+            url,
+            method: 'PUT',
+            headers,
+            body: this.encodeParameters(parameters),
         });
+        if (response && response.status === 200) {
+            this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
+            return;
+        }
+        throw new Error(response.statusText || this.defaultErrorMessage);
     }
 
-    public get(): Promise<DataObject | null> {
-        return new Promise<DataObject | null>((resolve, reject) => {
-            Promise.all([
-                this.getClient(),
-                this.getRequestHeaders(),
-                this.getUrl(),
-            ]).then(
-                ([client, headers, url]) => {
-                    client.request({
-                        url,
-                        headers,
-                    }).then(
-                        (response: any) => {
-                            if (response) {
-                                if (response.status === 200) {
-                                    this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
-                                    resolve(this.decodeParameters(response.data));
-                                } else {
-                                    reject(response.statusText || this.defaultErrorMessage);
-                                }
-                            } else {
-                                reject(this.defaultErrorMessage);
-                            }
-                        },
-                        (error: any) => reject(error),
-                    );
-                }, (error: any) => reject(error),
-            );
+    public async get(): Promise<DataObject> {
+        const [client, headers, url] = await Promise.all([
+            this.getClient(),
+            this.getRequestHeaders(),
+            this.getUrl(),
+        ]);
+        const response = await client.request({
+            url,
+            headers,
         });
+        if (response && response.status === 200) {
+            this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
+            return this.decodeParameters(response.data);
+        }
+        throw new Error(response.statusText || this.defaultErrorMessage);
     }
 
 }
