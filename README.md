@@ -9,12 +9,11 @@ This library used for interaction with
 REST API to set or get
 Remote Config values in Node.js environment.
 
-The library uses
-[node-cache](https://www.npmjs.com/package/node-cache) npm package
-for storing ETag value.
+## Dependacies
 
-The library uses
-[google-auth-library](https://www.npmjs.com/package/google-auth-library) npm package
+### [google-auth-library](https://www.npmjs.com/package/google-auth-library)
+
+The library uses **google-auth-library** npm package
 and provides a variety of ways to authenticate Remote Config API requests:
 - Provide a **keyId** and **key** of your Firebase project.
 - Provide a **private key file** for your Firebase service account.
@@ -23,6 +22,18 @@ and provides a variety of ways to authenticate Remote Config API requests:
 
 Read about Google Cloud API authentication at
 [Getting Started with Authentication](https://cloud.google.com/docs/authentication/getting-started)
+
+### [node-cache](https://www.npmjs.com/package/node-cache)
+
+The library uses **node-cache** npm package for storing ETag value.
+
+See **cacheOptions** config option.
+
+### [flat](https://www.npmjs.com/package/flat)
+
+The library uses **flat** npm package for flatten and unflatten Remote Config parameters.
+
+See **delimiter** config option.
 
 
 ## Example
