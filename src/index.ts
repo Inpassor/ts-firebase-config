@@ -116,7 +116,11 @@ export class FirebaseConfig {
                         && data.parameters[key].defaultValue
                         && data.parameters[key].defaultValue.value;
                     if (value) {
-                        parameters[key] = JSON.parse(value);
+                        try {
+                            parameters[key] = JSON.parse(value);
+                        } catch (e) {
+                            parameters[key] = value
+                        }
                     }
                 }
             }
