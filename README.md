@@ -7,9 +7,9 @@
 This library used for interaction with
 [Firebase Remote Config](https://firebase.google.com/products/remote-config)
 REST API to set or get
-Remote Config values in Node.js environment.
+Remote Config values in node.js environment.
 
-## Dependacies
+## Dependencies
 
 ### [google-auth-library](https://www.npmjs.com/package/google-auth-library)
 

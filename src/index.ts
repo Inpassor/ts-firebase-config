@@ -87,10 +87,24 @@ export class FirebaseConfig {
         return `https://firebaseremoteconfig.googleapis.com/v1/projects/${projectId}/remoteConfig`;
     }
 
-    private encodeParameters(parameters: DataObject): string {
-        const body: DataObject = {
-            parameters: {},
-        };
+    private encodeParameters(
+        parameters: DataObject,
+        conditions?: DataObject,
+        conditionalValues?: DataObject,
+    ): string {
+        const body: DataObject = {};
+        if (conditions) {
+            body.conditions = [];
+            for (const key in conditions) {
+                if (conditions.hasOwnProperty(key)) {
+                    body.conditions.push({
+                        name: key,
+                        expression: conditions[key],
+                    });
+                }
+            }
+        }
+        body.parameters = {};
         const flattenParameters = flatten(parameters, {
             delimiter: this.delimiter,
         });
@@ -102,6 +116,20 @@ export class FirebaseConfig {
                         value,
                     },
                 };
+            }
+        }
+        if (conditionalValues) {
+            for (const key in conditionalValues) {
+                if (conditionalValues.hasOwnProperty(key)) {
+                    body.parameters[key].conditionalValues = {};
+                    for (const conditionalValueName in conditionalValues[key]) {
+                        if (conditionalValues[key].hasOwnProperty(conditionalValueName)) {
+                            body.parameters[key].conditionalValues[conditionalValueName] = {
+                                value: conditionalValues[key][conditionalValueName],
+                            };
+                        }
+                    }
+                }
             }
         }
         return JSON.stringify(body);
@@ -146,7 +174,11 @@ export class FirebaseConfig {
         }
     }
 
-    public async set(parameters: DataObject): Promise<void> {
+    public async set(
+        parameters: DataObject,
+        conditions?: DataObject,
+        conditionalValues?: DataObject,
+    ): Promise<void> {
         const [client, headers, url] = await Promise.all([
             this.getClient(),
             this.getRequestHeaders(),
@@ -158,7 +190,7 @@ export class FirebaseConfig {
             url,
             method: 'PUT',
             headers,
-            body: this.encodeParameters(parameters),
+            body: this.encodeParameters(parameters, conditions, conditionalValues),
         });
         if (response && response.status === 200) {
             this.setETag(response.headers && response.headers.get && response.headers.get('etag'));
